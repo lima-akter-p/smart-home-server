@@ -31,6 +31,7 @@ async function run() {
     await client.connect();
     const db = client.db("home_db");
     const propertiesCollection = db.collection("properties");
+    const ratingsCollection = db.collection("rating");
 
     app.get("/properties", async (req, res) => {
       const cursor = propertiesCollection.find();
@@ -57,6 +58,19 @@ async function run() {
     app.post("/newProperty", async (req, res) => {
       const newProperty = req.body;
       const result = await propertiesCollection.insertOne(newProperty);
+      res.send(result);
+    });
+
+    app.post("/RatingProperty", async (req, res) => {
+      const newRating = req.body;
+      const result = await ratingsCollection.insertOne(newRating);
+      res.send(result);
+    });
+
+    app.get("/myRatings", async (req, res) => {
+      const {email} = req.query;
+      const query = { userEmail: email };
+      const result = await ratingsCollection.find(query).toArray();
       res.send(result);
     });
 
