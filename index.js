@@ -1,8 +1,10 @@
 const express = require("express");
+require('dotenv').config();
 const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const port = process.env.PORT || 3000;
+
 // middle wire
 app.use(cors());
 app.use(express.json());
@@ -10,7 +12,7 @@ app.use(express.json());
 // 58juOSQEpaznWsJQ
 // SmartHome1
 const uri =
-  "mongodb+srv://SmartHome1:58juOSQEpaznWsJQ@cluster.cqq5n0v.mongodb.net/?appName=Cluster";
+  `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster.cqq5n0v.mongodb.net/?appName=Cluster`;
 
 const client = new MongoClient(uri, {
   serverApi: {
@@ -34,10 +36,16 @@ async function run() {
     const ratingsCollection = db.collection("rating");
 
     app.get("/properties", async (req, res) => {
-      const cursor = propertiesCollection.find();
+      const { sortBy = "price-asc" } = req.query;
+      const sortProp = sortBy.split("-")[0];
+      const sortValue = sortBy.split("-")[1] === "asc" ? 1 : -1;
+      
+      const cursor = propertiesCollection.find().sort({ [sortProp]: sortValue });
+      
       const result = await cursor.toArray();
       res.send(result);
     });
+
 
     app.get("/latest-properties", async (req, res) => {
       const cursor = propertiesCollection
@@ -68,7 +76,7 @@ async function run() {
     });
 
     app.get("/myRatings", async (req, res) => {
-      const {email} = req.query;
+      const { email } = req.query;
       const query = { userEmail: email };
       const result = await ratingsCollection.find(query).toArray();
       res.send(result);
